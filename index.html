@@ -1,0 +1,1096 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Senso Unico Alternato</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: banda gialla "cantiere" in testa, scena stradale a tutta larghezza, sotto due colonne (codice | analisi) */
+:root{
+  --bg:#ECEFEA; --panel:#FFFFFF; --ink:#1D2228; --muted:#5A636E; --line:#D3D8D0;
+  --accent:#F2B705; --accent-ink:#2A2000; --stripe:#1D2228;
+  --grass:#B7C79D; --grass2:#A8BA8C; --asphalt:#4A4F57; --mark:#F5F5EF; --water:#7DB1D3; --water2:#A7CCE5; --rail:#C9CCD0;
+  --ok:#2C8A55; --warn:#B86E00; --err:#C4302A;
+  --led-r:#FF3B30; --led-y:#FFC400; --led-g:#1FD267; --led-off:#3A3F46;
+  --code-bg:#F6F7F3; --chip:#EEF1EC;
+  --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14171B; --panel:#1C2025; --ink:#E7EAE5; --muted:#9AA3AD; --line:#2E343B;
+  --accent:#F2B705; --accent-ink:#1A1400; --stripe:#14171B;
+  --grass:#2C3826; --grass2:#27321F; --asphalt:#3B4047; --mark:#D8D8D0; --water:#1D4763; --water2:#2A5D7E; --rail:#6B7178;
+  --ok:#4CC38A; --warn:#F0A43A; --err:#FF6B60; --led-off:#2A2E34; --code-bg:#16191D; --chip:#252A30; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#14171B; --panel:#1C2025; --ink:#E7EAE5; --muted:#9AA3AD; --line:#2E343B;
+  --accent:#F2B705; --accent-ink:#1A1400; --stripe:#14171B;
+  --grass:#2C3826; --grass2:#27321F; --asphalt:#3B4047; --mark:#D8D8D0; --water:#1D4763; --water2:#2A5D7E; --rail:#6B7178;
+  --ok:#4CC38A; --warn:#F0A43A; --err:#FF6B60; --led-off:#2A2E34; --code-bg:#16191D; --chip:#252A30; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1400px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{background:var(--accent);color:var(--accent-ink);position:relative}
+.top::after{content:"";display:block;height:8px;background:repeating-linear-gradient(-45deg,var(--stripe) 0 12px,var(--accent) 12px 24px)}
+.top-in{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-block:12px}
+.brand{display:flex;align-items:center;gap:14px}
+.brand svg{flex:none}
+h1{font-family:var(--f-display);font-weight:700;font-size:30px;letter-spacing:.04em;text-transform:uppercase;margin:0;line-height:1}
+.brand p{margin:2px 0 0;font-size:13px;opacity:.8}
+.tabs{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.lang{display:flex;margin-left:8px;border:2px solid var(--accent-ink);border-radius:4px;overflow:hidden}
+.tabs .lang button{font:600 14px var(--f-display);letter-spacing:.06em;border:0;background:transparent;color:var(--accent-ink);padding:6px 10px;cursor:pointer}
+.tabs .lang button[aria-pressed="true"]{background:var(--accent-ink);color:var(--accent)}
+.tabs .lang button:focus-visible{outline:3px solid var(--accent-ink);outline-offset:-3px}
+.tabs button{font:600 16px var(--f-display);letter-spacing:.06em;text-transform:uppercase;border:2px solid var(--accent-ink);background:transparent;color:var(--accent-ink);padding:6px 16px;border-radius:4px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent-ink);color:var(--accent)}
+main{padding-block:16px 40px}
+.stage{background:var(--grass);border-radius:6px;overflow:hidden;position:relative;border:1px solid var(--line)}
+#road{display:block;width:100%;height:330px}
+.ledbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;padding:10px 14px;background:var(--panel);border-top:1px solid var(--line)}
+.ledgrp{display:flex;align-items:center;gap:10px}
+.ledgrp b{font:600 15px var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.led{display:flex;flex-direction:column;align-items:center;gap:2px;font:11px var(--f-mono);color:var(--muted)}
+.led i{width:18px;height:18px;border-radius:50%;background:var(--led-off);box-shadow:inset 0 -2px 3px rgba(0,0,0,.35);transition:background .08s,box-shadow .08s}
+.led.on.r i{background:var(--led-r);box-shadow:0 0 10px var(--led-r)}
+.led.on.y i{background:var(--led-y);box-shadow:0 0 10px var(--led-y)}
+.led.on.g i{background:var(--led-g);box-shadow:0 0 10px var(--led-g)}
+.clock{margin-left:auto;font:600 22px var(--f-mono);font-variant-numeric:tabular-nums}
+.clock small{font:12px var(--f-body);color:var(--muted);margin-right:6px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+.btn{font:600 15px var(--f-body);border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 14px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn:focus-visible,.tabs button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+select,input[type=number]{font:14px var(--f-body);background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.prog{flex:1 1 160px;height:8px;background:var(--chip);border-radius:4px;overflow:hidden;min-width:120px}
+.prog i{display:block;height:100%;width:0;background:var(--accent)}
+label.inl{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.tile span{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.tile strong{font:600 26px var(--f-display);font-variant-numeric:tabular-nums}
+.tile.bad strong{color:var(--err)} .tile.good strong{color:var(--ok)}
+.verdict{margin-top:14px;padding:12px 16px;border-radius:6px;border:2px solid var(--line);background:var(--panel);font-weight:700;display:flex;gap:10px;align-items:center}
+.verdict.ok{border-color:var(--ok)} .verdict.err{border-color:var(--err)} .verdict.warn{border-color:var(--warn)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;margin-top:16px}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0}
+.panel h2{font:600 19px var(--f-display);letter-spacing:.05em;text-transform:uppercase;margin:0 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.panel h2 .sp{flex:1}
+textarea#code{width:100%;min-height:440px;font:13px/1.55 var(--f-mono);background:var(--code-bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:12px;resize:vertical;tab-size:2;white-space:pre;overflow:auto}
+details summary{cursor:pointer;color:var(--muted);font-size:13px;margin-top:8px}
+pre.js{font:12px/1.5 var(--f-mono);background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:10px;overflow:auto;max-height:260px}
+.console{font:12.5px/1.5 var(--f-mono);background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:10px;max-height:220px;overflow:auto;white-space:pre-wrap}
+.console .e{color:var(--err)} .console .w{color:var(--warn)} .console .i{color:var(--muted)}
+.checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.checks li{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
+.pill{font:700 11px var(--f-body);text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:20px;color:#fff;min-width:58px;text-align:center}
+.pill.ok{background:var(--ok)} .pill.warn{background:var(--warn)} .pill.err{background:var(--err)} .pill.info{background:var(--muted)}
+.checks small{display:block;color:var(--muted)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:12px}
+.kv div{background:var(--chip);border-radius:6px;padding:8px 10px}
+.kv span{display:block;font-size:12px;color:var(--muted)}
+.kv b{font:600 18px var(--f-display);font-variant-numeric:tabular-nums}
+#chrono{width:100%;height:190px;display:block}
+.pins{display:grid;grid-template-columns:auto repeat(3,1fr);gap:6px 10px;align-items:center;font-size:14px}
+.pins .h{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.set{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:14px}
+.set label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.set output{color:var(--ink);font-weight:700}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0}
+/* Consegna */
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:28px max(20px,4vw);max-width:900px;margin:0 auto}
+.sheet h2{font:700 34px var(--f-display);text-transform:uppercase;letter-spacing:.03em;margin:0;text-wrap:balance;line-height:1.05}
+.sheet .eyebrow{font:600 14px var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.sheet h3{font:600 22px var(--f-display);letter-spacing:.04em;text-transform:uppercase;margin:28px 0 8px;padding-top:12px;border-top:2px solid var(--ink)}
+.sheet p,.sheet li{max-width:68ch}
+.sheet ol{padding-left:22px} .sheet li{margin-bottom:6px}
+.sheet table{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0}
+.sheet th,.sheet td{border:1px solid var(--line);padding:6px 10px;text-align:left}
+.sheet th{background:var(--chip);font-weight:700}
+.tw{overflow-x:auto}
+.sheet code{font:13px var(--f-mono);background:var(--chip);padding:1px 5px;border-radius:4px}
+.sheet .fig{margin:16px 0;overflow-x:auto}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+.teacher{margin-top:28px;border:1px dashed var(--muted);border-radius:6px;padding:10px 14px}
+.teacher summary{font-weight:700;color:var(--ink);font-size:14px;margin:0}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<style>body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-in">
+    <div class="brand">
+      <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="20" fill="#fff" stroke="#C4302A" stroke-width="5"/><text x="22" y="29" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="20" fill="#1D2228">30</text></svg>
+      <div><h1 data-i18n="hdr.title">Senso Unico Alternato</h1><p data-i18n="hdr.sub">Ponte di 1 km · una corsia · due semafori comandati da Arduino</p></div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" id="t-sim" aria-selected="true" data-tab="sim" data-i18n="tab.sim">Simulatore</button>
+      <button role="tab" id="t-hw" aria-selected="false" data-tab="hw" data-i18n="tab.hw">Consegna</button>
+      <div class="lang" role="group" aria-label="Lingua / Language">
+        <button type="button" data-lang="it" aria-pressed="true" title="Italiano">IT</button>
+        <button type="button" data-lang="en" aria-pressed="false" title="English">EN</button>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+<section id="tab-sim">
+  <div class="stage">
+    <canvas id="road" data-i18n-aria="aria.road" aria-label="Simulazione del ponte con i veicoli"></canvas>
+    <div class="ledbar">
+      <div class="ledgrp"><b data-i18n="led.A">Semaforo A</b>
+        <div class="led r" id="L-Ar"><i></i><span id="P-Ar">13</span></div>
+        <div class="led y" id="L-Ay"><i></i><span id="P-Ay">12</span></div>
+        <div class="led g" id="L-Ag"><i></i><span id="P-Ag">11</span></div>
+      </div>
+      <div class="ledgrp"><b data-i18n="led.B">Semaforo B</b>
+        <div class="led r" id="L-Br"><i></i><span id="P-Br">10</span></div>
+        <div class="led y" id="L-By"><i></i><span id="P-By">9</span></div>
+        <div class="led g" id="L-Bg"><i></i><span id="P-Bg">8</span></div>
+      </div>
+      <div class="clock"><small data-i18n="clock">tempo reale simulato</small><span id="clock">00:00</span></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn primary" id="run" data-i18n="btn.run">▶ Esegui il codice</button>
+    <button class="btn" id="pause">❚❚ Pausa</button>
+    <button class="btn" id="restart" data-i18n="btn.restart">↺ Ricomincia</button>
+    <button class="btn" id="skip" data-i18n="btn.skip">⏭ Vai alla fine</button>
+    <label class="inl"><span data-i18n="speed">Velocità</span>
+      <select id="speed"><option value="1">1×</option><option value="5">5×</option><option value="10" selected>10×</option><option value="30">30×</option><option value="60">60×</option></select>
+    </label>
+    <div class="prog" aria-hidden="true"><i id="prog"></i></div>
+  </div>
+
+  <div class="tiles">
+    <div class="tile"><span data-i18n="tile.pa">Passati da A → B</span><strong id="s-pa">0</strong></div>
+    <div class="tile"><span data-i18n="tile.pb">Passati da B → A</span><strong id="s-pb">0</strong></div>
+    <div class="tile"><span data-i18n="tile.wait">Attesa media</span><strong id="s-wait">–</strong></div>
+    <div class="tile"><span data-i18n="tile.q">Coda massima</span><strong id="s-q">0</strong></div>
+    <div class="tile" id="t-cc"><span data-i18n="tile.cc">Scontri per il ciclo</span><strong id="s-cc">0</strong></div>
+    <div class="tile" id="t-cr"><span data-i18n="tile.cr">Scontri per il rosso</span><strong id="s-cr">0</strong></div>
+    <div class="tile"><span data-i18n="tile.run">Passaggi col rosso</span><strong id="s-run">0</strong></div>
+  </div>
+  <div class="verdict" id="verdict" hidden></div>
+
+  <div class="grid2">
+    <div class="col">
+      <div class="panel">
+        <h2><span data-i18n="code.h">Codice dello studente</span> <span class="sp"></span>
+          <select id="example" data-i18n-aria="aria.example" aria-label="Carica un esempio">
+            <option value="" data-i18n="ex.load">Carica esempio…</option>
+            <option value="wrong" data-i18n="ex.wrong">Esempio con errore (1:10)</option>
+          </select>
+        </h2>
+        <textarea id="code" spellcheck="false" data-i18n-aria="aria.code" aria-label="Codice Arduino"></textarea>
+        <p class="note" data-i18n-html="code.note">Incolla lo sketch così com'è da Tinkercad e premi <b>Esegui il codice</b>. Se nella prima riga c'è il commento <code>// SCALA 1:10</code> la scala dei tempi si imposta da sola.</p>
+        <details><summary data-i18n="code.js">Mostra il codice convertito (per capire gli errori)</summary><pre class="js" id="jsout"></pre></details>
+      </div>
+      <div class="panel">
+        <h2>Console</h2>
+        <div class="console" id="console" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel">
+        <h2 data-i18n="chrono.h">Cronogramma dei LED</h2>
+        <canvas id="chrono" data-i18n-aria="aria.chrono" aria-label="Cronogramma accensione LED"></canvas>
+        <p class="note" data-i18n-html="chrono.note">Le bande tratteggiate sono le fasi di <b>tutto rosso</b>, quando entrambi i semafori sono rossi.</p>
+      </div>
+      <div class="panel">
+        <h2><span data-i18n="set.h">Impostazioni</span> <span class="sp"></span><button class="btn" id="detect" style="font-size:13px;padding:5px 10px" data-i18n="set.detect">Rileva pin dal codice</button></h2>
+        <div class="pins" id="pins">
+          <span></span><span class="h" data-i18n="pin.r">Rosso</span><span class="h" data-i18n="pin.y">Giallo</span><span class="h" data-i18n="pin.g">Verde</span>
+          <b>A</b><select id="pin-Ar"></select><select id="pin-Ay"></select><select id="pin-Ag"></select>
+          <b>B</b><select id="pin-Br"></select><select id="pin-By"></select><select id="pin-Bg"></select>
+        </div>
+        <div class="set">
+          <label><span data-i18n="set.scale">Scala dei tempi nel codice</span>
+            <select id="scale"><option value="1" data-i18n="sc1">1 s nel codice = 1 s reale</option><option value="10" data-i18n="sc10">1 s nel codice = 10 s reali (1:10)</option><option value="60" data-i18n="sc60">1 s nel codice = 1 min reale (1:60)</option></select></label>
+          <label><span data-i18n="set.dur">Durata simulazione</span>
+            <select id="dur"><option value="10" data-i18n="dur10">10 minuti</option><option value="20" selected data-i18n="dur20">20 minuti</option><option value="30" data-i18n="dur30">30 minuti</option><option value="60" data-i18n="dur60">60 minuti</option></select></label>
+          <label><span><span data-i18n="set.rate">Veicoli in arrivo per lato:</span> <output id="o-rate">2</output>/min</span>
+            <input type="range" id="rate" min="0.5" max="6" step="0.5" value="2"></label>
+          <label><span><span data-i18n="set.red">Chi passa col rosso:</span> <output id="o-red">10</output>%</span>
+            <input type="range" id="red" min="0" max="30" step="1" value="10"></label>
+          <label><span data-i18n="set.vmode">Velocità dei veicoli</span>
+            <select id="vmode"><option value="30" data-i18n="v30">Tutti a 30 km/h</option><option value="20" data-i18n="v20">Variabile 20–30 km/h</option></select></label>
+          <label><span data-i18n="set.seed">Traffico (seme casuale)</span>
+            <input type="number" id="seed" value="7" min="1" max="9999"></label>
+        </div>
+        <p class="note" data-i18n-html="set.note">Con lo stesso seme il traffico è identico per tutti: così i codici degli studenti si confrontano a parità di condizioni. Dopo una modifica premi di nuovo <b>Esegui il codice</b>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tab-hw" hidden>
+  <article class="sheet" lang="it" data-lang-block="it">
+    <div class="eyebrow">Compito per casa · Arduino + Tinkercad</div>
+    <h2>Il ponte a senso unico alternato</h2>
+    <p>Un ponte stradale lungo <b>1 km</b> ha una sola corsia: può passare <b>un solo senso di marcia alla volta</b>. Il limite di velocità è <b>30 km/h</b>. Alle due estremità, A (ovest) e B (est), c'è un semaforo con rosso, giallo e verde. Devi progettare il circuito e programmare Arduino in modo che due veicoli non si trovino mai uno contro l'altro sul ponte.</p>
+    <div class="fig">
+      <svg viewBox="0 0 640 170" width="640" style="max-width:100%;height:auto" role="img" aria-label="Schema del ponte">
+        <rect x="0" y="0" width="640" height="170" fill="var(--chip)"/>
+        <rect x="150" y="55" width="340" height="80" fill="var(--water)" opacity=".7"/>
+        <path d="M0 60 H120 L150 78 H490 L520 60 H640 V120 H520 L490 102 H150 L120 120 H0 Z" fill="var(--asphalt)"/>
+        <path d="M0 90 H118 M522 90 H640" stroke="var(--mark)" stroke-width="2" stroke-dasharray="8 6"/>
+        <rect x="104" y="124" width="14" height="34" rx="3" fill="#222"/><circle cx="111" cy="131" r="4" fill="var(--led-r)"/><circle cx="111" cy="141" r="4" fill="#555"/><circle cx="111" cy="151" r="4" fill="#555"/>
+        <rect x="522" y="22" width="14" height="34" rx="3" fill="#222"/><circle cx="529" cy="29" r="4" fill="#555"/><circle cx="529" cy="39" r="4" fill="#555"/><circle cx="529" cy="49" r="4" fill="var(--led-g)"/>
+        <text x="80" y="150" font-family="Barlow Condensed, sans-serif" font-size="18" font-weight="700" fill="var(--ink)">A</text>
+        <text x="548" y="44" font-family="Barlow Condensed, sans-serif" font-size="18" font-weight="700" fill="var(--ink)">B</text>
+        <path d="M150 150 H490" stroke="var(--ink)" stroke-width="1.5"/><path d="M150 144 V156 M490 144 V156" stroke="var(--ink)" stroke-width="1.5"/>
+        <text x="320" y="166" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-size="16" font-weight="600" fill="var(--ink)">1 km</text>
+        <circle cx="320" cy="28" r="18" fill="#fff" stroke="#C4302A" stroke-width="4"/><text x="320" y="35" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="18" fill="#1D2228">30</text>
+      </svg>
+    </div>
+
+    <h3>Materiale</h3>
+    <p>Tinkercad Circuits · Arduino Uno R3 · 6 LED (2 rossi, 2 gialli, 2 verdi) · 6 resistori · breadboard e cavi.</p>
+    <p><b>Collegamenti obbligatori</b> (servono per provare il codice in classe nel simulatore):</p>
+    <div class="tw"><table>
+      <tr><th></th><th><span class="dot" style="background:var(--led-r)"></span>Rosso</th><th><span class="dot" style="background:var(--led-y)"></span>Giallo</th><th><span class="dot" style="background:var(--led-g)"></span>Verde</th></tr>
+      <tr><th>Semaforo A</th><td>pin 13</td><td>pin 12</td><td>pin 11</td></tr>
+      <tr><th>Semaforo B</th><td>pin 10</td><td>pin 9</td><td>pin 8</td></tr>
+    </table></div>
+
+    <h3>Parte 1 · Calcoli</h3>
+    <ol>
+      <li>Converti 30 km/h in m/s.</li>
+      <li>Calcola il tempo minimo che impiega un veicolo a percorrere tutto il ponte alla velocità massima. Perché un veicolo più lento è un problema?</li>
+      <li>Calcola la resistenza da mettere in serie a ogni LED (V<sub>cc</sub> = 5 V, V<sub>LED</sub> ≈ 2 V, I = 15 mA) e scegli il valore commerciale più vicino.</li>
+    </ol>
+
+    <h3>Parte 2 · Il ciclo semaforico</h3>
+    <ol start="4">
+      <li>Completa la tabella delle fasi:
+        <div class="tw"><table>
+          <tr><th>Fase</th><th>Semaforo A</th><th>Semaforo B</th><th>Durata</th></tr>
+          <tr><td>1</td><td>Verde</td><td>Rosso</td><td></td></tr>
+          <tr><td>2</td><td>Giallo</td><td>Rosso</td><td></td></tr>
+          <tr><td>3</td><td>Rosso</td><td>Rosso</td><td></td></tr>
+          <tr><td>4</td><td>Rosso</td><td>Verde</td><td></td></tr>
+          <tr><td>5</td><td>Rosso</td><td>Giallo</td><td></td></tr>
+          <tr><td>6</td><td>Rosso</td><td>Rosso</td><td></td></tr>
+        </table></div>
+      </li>
+      <li>Spiega perché le fasi 3 e 6 (<b>tutto rosso</b>) devono durare almeno quanto il tempo calcolato al punto 2.</li>
+      <li>Calcola la durata totale del ciclo.</li>
+    </ol>
+
+    <h3>Parte 3 · Tinkercad</h3>
+    <ol start="7">
+      <li>Realizza il circuito rispettando i pin della tabella.</li>
+      <li>Scrivi lo sketch: usa <code>#define</code> (o costanti) per i pin, <code>pinMode()</code> in <code>setup()</code> e il ciclo in <code>loop()</code> con <code>digitalWrite()</code> e <code>delay()</code>. Chi vuole può usare <code>millis()</code>.</li>
+      <li>Puoi usare i tempi reali oppure ridurli di 10 volte per provare più in fretta. In quel caso scrivi nella prima riga del codice il commento <code>// SCALA 1:10</code>.</li>
+    </ol>
+
+    <h3>Parte 4 · E se qualcuno passa con il rosso?</h3>
+    <ol start="10">
+      <li>Cosa succede se un veicolo entra con il rosso all'inizio della fase di tutto rosso? E se entra quando l'altro lato è già verde?</li>
+      <li>Con soli 6 LED il tuo sistema può impedire lo scontro? Proponi almeno due soluzioni (per esempio: allungare il tutto rosso, sensori all'ingresso e all'uscita per contare i veicoli, telecamera per le infrazioni, pulsante di chiamata). Per ognuna indica pro e contro.</li>
+    </ol>
+
+    
+  </article>
+  <article class="sheet" lang="en" data-lang-block="en" hidden>
+    <div class="eyebrow">Homework · Arduino + Tinkercad</div>
+    <h2>The alternating one-way bridge</h2>
+    <p>A road bridge <b>1 km</b> long has a single lane: traffic can only flow <b>in one direction at a time</b>. The speed limit is <b>30 km/h</b>. At both ends, A (west) and B (east), there is a traffic light with red, yellow and green. Design the circuit and program Arduino so that two vehicles never meet head-on on the bridge.</p>
+    <div class="fig">
+      <svg viewBox="0 0 640 170" width="640" style="max-width:100%;height:auto" role="img" aria-label="Schema del ponte">
+        <rect x="0" y="0" width="640" height="170" fill="var(--chip)"/>
+        <rect x="150" y="55" width="340" height="80" fill="var(--water)" opacity=".7"/>
+        <path d="M0 60 H120 L150 78 H490 L520 60 H640 V120 H520 L490 102 H150 L120 120 H0 Z" fill="var(--asphalt)"/>
+        <path d="M0 90 H118 M522 90 H640" stroke="var(--mark)" stroke-width="2" stroke-dasharray="8 6"/>
+        <rect x="104" y="124" width="14" height="34" rx="3" fill="#222"/><circle cx="111" cy="131" r="4" fill="var(--led-r)"/><circle cx="111" cy="141" r="4" fill="#555"/><circle cx="111" cy="151" r="4" fill="#555"/>
+        <rect x="522" y="22" width="14" height="34" rx="3" fill="#222"/><circle cx="529" cy="29" r="4" fill="#555"/><circle cx="529" cy="39" r="4" fill="#555"/><circle cx="529" cy="49" r="4" fill="var(--led-g)"/>
+        <text x="80" y="150" font-family="Barlow Condensed, sans-serif" font-size="18" font-weight="700" fill="var(--ink)">A</text>
+        <text x="548" y="44" font-family="Barlow Condensed, sans-serif" font-size="18" font-weight="700" fill="var(--ink)">B</text>
+        <path d="M150 150 H490" stroke="var(--ink)" stroke-width="1.5"/><path d="M150 144 V156 M490 144 V156" stroke="var(--ink)" stroke-width="1.5"/>
+        <text x="320" y="166" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-size="16" font-weight="600" fill="var(--ink)">1 km</text>
+        <circle cx="320" cy="28" r="18" fill="#fff" stroke="#C4302A" stroke-width="4"/><text x="320" y="35" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="18" fill="#1D2228">30</text>
+      </svg>
+    </div>
+
+    <h3>Materials</h3>
+    <p>Tinkercad Circuits · Arduino Uno R3 · 6 LEDs (2 red, 2 yellow, 2 green) · 6 resistors · breadboard and wires.</p>
+    <p><b>Required connections</b> (needed to test your code in class with the simulator):</p>
+    <div class="tw"><table>
+      <tr><th></th><th><span class="dot" style="background:var(--led-r)"></span>Red</th><th><span class="dot" style="background:var(--led-y)"></span>Yellow</th><th><span class="dot" style="background:var(--led-g)"></span>Green</th></tr>
+      <tr><th>Light A</th><td>pin 13</td><td>pin 12</td><td>pin 11</td></tr>
+      <tr><th>Light B</th><td>pin 10</td><td>pin 9</td><td>pin 8</td></tr>
+    </table></div>
+
+    <h3>Part 1 · Calculations</h3>
+    <ol>
+      <li>Convert 30 km/h to m/s.</li>
+      <li>Calculate the minimum time a vehicle needs to cross the whole bridge at the speed limit. Why is a slower vehicle a problem?</li>
+      <li>Calculate the resistor to put in series with each LED (V<sub>cc</sub> = 5 V, V<sub>LED</sub> ≈ 2 V, I = 15 mA) and choose the closest standard value.</li>
+    </ol>
+
+    <h3>Part 2 · The light cycle</h3>
+    <ol start="4">
+      <li>Complete the phase table:
+        <div class="tw"><table>
+          <tr><th>Phase</th><th>Light A</th><th>Light B</th><th>Duration</th></tr>
+          <tr><td>1</td><td>Green</td><td>Red</td><td></td></tr>
+          <tr><td>2</td><td>Yellow</td><td>Red</td><td></td></tr>
+          <tr><td>3</td><td>Red</td><td>Red</td><td></td></tr>
+          <tr><td>4</td><td>Red</td><td>Green</td><td></td></tr>
+          <tr><td>5</td><td>Red</td><td>Yellow</td><td></td></tr>
+          <tr><td>6</td><td>Red</td><td>Red</td><td></td></tr>
+        </table></div>
+      </li>
+      <li>Explain why phases 3 and 6 (<b>all red</b>) must last at least as long as the time you calculated in step 2.</li>
+      <li>Calculate the total length of the cycle.</li>
+    </ol>
+
+    <h3>Part 3 · Tinkercad</h3>
+    <ol start="7">
+      <li>Build the circuit using the pins in the table.</li>
+      <li>Write the sketch: use <code>#define</code> (or constants) for the pins, <code>pinMode()</code> in <code>setup()</code> and the cycle in <code>loop()</code> with <code>digitalWrite()</code> and <code>delay()</code>. If you like, you can use <code>millis()</code>.</li>
+      <li>You can use real durations or make them 10 times shorter to test faster. In that case, write the comment <code>// SCALE 1:10</code> on the first line of your code.</li>
+    </ol>
+
+    <h3>Part 4 · What if someone runs the red light?</h3>
+    <ol start="10">
+      <li>What happens if a vehicle enters on red at the start of the all-red phase? And if it enters when the other side already has green?</li>
+      <li>With only 6 LEDs, can your system prevent the collision? Suggest at least two solutions (for example: a longer all-red phase, sensors at the entrance and exit to count vehicles, a red-light camera, a call button). For each one, list pros and cons.</li>
+    </ol>
+
+    
+  </article>
+</section>
+</main>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const BRIDGE = 1000, APP = 60, EXIT = 60, VAPP = 30 / 3.6, DT = 0.1;
+/* Distanze realistiche: auto lunga 4,5 m, 2,5 m di spazio da ferme, distanza di sicurezza di 3 secondi in marcia
+   (a 30 km/h: 4,5 + 2,5 + 25 = 32 m tra un muso e l'altro). Partenza graduale e frenata dolce. */
+const LEN = 4.5, S0 = 2.5, HW = 3.0, ACC = 1.5, DEC = 3.0;
+const ROLES = ['Ar','Ay','Ag','Br','By','Bg'];
+
+/* ---------- Esempi ---------- */
+const EX_IT = {
+wrong:`// SCALA 1:10   (1 s nel codice = 10 s reali)
+// Semaforo senso unico alternato - ESEMPIO CON ERRORE
+#define A_ROSSO   13
+#define A_GIALLO  12
+#define A_VERDE   11
+#define B_ROSSO   10
+#define B_GIALLO   9
+#define B_VERDE    8
+
+void setup() {
+  pinMode(A_ROSSO, OUTPUT);
+  pinMode(A_GIALLO, OUTPUT);
+  pinMode(A_VERDE, OUTPUT);
+  pinMode(B_ROSSO, OUTPUT);
+  pinMode(B_GIALLO, OUTPUT);
+  pinMode(B_VERDE, OUTPUT);
+}
+
+void loop() {
+  // Fase 1: verde ad A, rosso a B
+  digitalWrite(A_ROSSO, LOW);  digitalWrite(A_VERDE, HIGH);
+  digitalWrite(B_ROSSO, HIGH);
+  delay(6000);                 // 60 s reali
+
+  // Fase 2: giallo ad A
+  digitalWrite(A_VERDE, LOW);  digitalWrite(A_GIALLO, HIGH);
+  delay(400);                  // 4 s reali
+
+  // Fase 3: tutto rosso
+  digitalWrite(A_GIALLO, LOW); digitalWrite(A_ROSSO, HIGH);
+  delay(3000);                 // 30 s reali
+
+  // Fase 4: verde a B
+  digitalWrite(B_ROSSO, LOW);  digitalWrite(B_VERDE, HIGH);
+  delay(6000);
+
+  // Fase 5: giallo a B
+  digitalWrite(B_VERDE, LOW);  digitalWrite(B_GIALLO, HIGH);
+  delay(400);
+
+  // Fase 6: tutto rosso
+  digitalWrite(B_GIALLO, LOW); digitalWrite(B_ROSSO, HIGH);
+  delay(3000);
+}
+`,
+};
+const EX_EN = {
+wrong:`// SCALE 1:10   (1 s in the code = 10 s in real life)
+// Alternating one-way traffic lights - EXAMPLE WITH A BUG
+#define A_RED     13
+#define A_YELLOW  12
+#define A_GREEN   11
+#define B_RED     10
+#define B_YELLOW   9
+#define B_GREEN    8
+
+void setup() {
+  pinMode(A_RED, OUTPUT);
+  pinMode(A_YELLOW, OUTPUT);
+  pinMode(A_GREEN, OUTPUT);
+  pinMode(B_RED, OUTPUT);
+  pinMode(B_YELLOW, OUTPUT);
+  pinMode(B_GREEN, OUTPUT);
+}
+
+void loop() {
+  // Phase 1: green for A, red for B
+  digitalWrite(A_RED, LOW);    digitalWrite(A_GREEN, HIGH);
+  digitalWrite(B_RED, HIGH);
+  delay(6000);                 // 60 s real time
+
+  // Phase 2: yellow for A
+  digitalWrite(A_GREEN, LOW);  digitalWrite(A_YELLOW, HIGH);
+  delay(400);                  // 4 s real time
+
+  // Phase 3: all red
+  digitalWrite(A_YELLOW, LOW); digitalWrite(A_RED, HIGH);
+  delay(3000);                 // 30 s real time
+
+  // Phase 4: green for B
+  digitalWrite(B_RED, LOW);    digitalWrite(B_GREEN, HIGH);
+  delay(6000);
+
+  // Phase 5: yellow for B
+  digitalWrite(B_GREEN, LOW);  digitalWrite(B_YELLOW, HIGH);
+  delay(400);
+
+  // Phase 6: all red
+  digitalWrite(B_YELLOW, LOW); digitalWrite(B_RED, HIGH);
+  delay(3000);
+}
+`,
+};
+
+/* ---------- Lingua ---------- */
+const I18N = {
+it:{
+ 'hdr.title':'Senso Unico Alternato','hdr.sub':'Ponte di 1 km · una corsia · due semafori comandati da Arduino',
+ 'tab.sim':'Simulatore','tab.hw':'Consegna','aria.road':'Simulazione del ponte con i veicoli','led.A':'Semaforo A','led.B':'Semaforo B',
+ 'clock':'tempo reale simulato','btn.run':'▶ Esegui il codice','btn.pause':'❚❚ Pausa','btn.resume':'▶ Riprendi','btn.restart':'↺ Ricomincia','btn.skip':'⏭ Vai alla fine','speed':'Velocità',
+ 'tile.pa':'Passati da A → B','tile.pb':'Passati da B → A','tile.wait':'Attesa media','tile.q':'Coda massima','tile.cc':'Scontri per il ciclo','tile.cr':'Scontri per il rosso','tile.run':'Passaggi col rosso',
+ 'code.h':'Codice dello studente','aria.example':'Carica un esempio','ex.load':'Carica esempio…','ex.wrong':'Esempio con errore (1:10)','ex.ok':'Soluzione base (tempi reali)','ex.millis':'Versione avanzata con millis() (1:10)',
+ 'aria.code':'Codice Arduino','code.note':'Incolla lo sketch così com\'è da Tinkercad e premi <b>Esegui il codice</b>. Se nella prima riga c\'è il commento <code>// SCALA 1:10</code> la scala dei tempi si imposta da sola.',
+ 'code.js':'Mostra il codice convertito (per capire gli errori)','chrono.h':'Cronogramma dei LED','aria.chrono':'Cronogramma accensione LED',
+ 'chrono.note':'Le bande tratteggiate sono le fasi di <b>tutto rosso</b>, quando entrambi i semafori sono rossi.',
+ 'set.h':'Impostazioni','set.detect':'Rileva pin dal codice','pin.r':'Rosso','pin.y':'Giallo','pin.g':'Verde',
+ 'set.scale':'Scala dei tempi nel codice','sc1':'1 s nel codice = 1 s reale','sc10':'1 s nel codice = 10 s reali (1:10)','sc60':'1 s nel codice = 1 min reale (1:60)',
+ 'set.dur':'Durata simulazione','dur10':'10 minuti','dur20':'20 minuti','dur30':'30 minuti','dur60':'60 minuti',
+ 'set.rate':'Veicoli in arrivo per lato:','set.red':'Chi passa col rosso:','set.vmode':'Velocità dei veicoli','v30':'Tutti a 30 km/h','v20':'Variabile 20–30 km/h','set.seed':'Traffico (seme casuale)',
+ 'set.note':'Con lo stesso seme il traffico è identico per tutti: così i codici degli studenti si confrontano a parità di condizioni. Dopo una modifica premi di nuovo <b>Esegui il codice</b>.',
+ 'err.loop':'Il programma esegue troppe operazioni senza far passare il tempo: c\'è forse un ciclo infinito senza delay()?',
+ 'err.syntax':'Errore di sintassi: {m}. Controlla parentesi graffe, punti e virgola e nomi delle variabili.',
+ 'err.nofn':'Non trovo le funzioni setup() e loop().','err.run':'Errore durante l\'esecuzione: {m}',
+ 'log.scale':'Scala dei tempi impostata a 1:{n} dal commento nel codice.','log.scaleNo':'Scala 1:{n} non disponibile: scegli la scala a mano.',
+ 'log.pins':'Pin rilevati dai nomi nel codice: A {a}, B {b}.','log.pinsPart':'Rilevati {n} pin su 6 dai nomi: controlla le impostazioni.',
+ 'log.ledoff':'I LED dei semafori non si accendono mai. Controlla che i pin nel codice corrispondano a quelli nelle Impostazioni.',
+ 'log.crash':'{t}  Scontro frontale a {x} m da A ({n} veicoli bloccati sul ponte) — ','log.crashCycle':'entrambi entrati regolarmente: il ciclo non lascia sgomberare il ponte.','log.crashRed':'un veicolo è entrato col rosso.',
+ 'log.end':'Fine simulazione.',
+ 'v.code':'⚠ Il codice non funziona. Guarda la console per i dettagli.','v.led':'⚠ I LED dei semafori non si accendono mai. Guarda la console per i dettagli.',
+ 'v.err':'✗ Ciclo non sicuro: {n} scontri frontali tra veicoli entrati regolarmente.','v.errRed':' Altri {n} per passaggi col rosso.',
+ 'v.none':'⚠ Nessuno scontro, ma nessun veicolo è riuscito ad attraversare il ponte.',
+ 'v.ok':'✓ Nessuno scontro dovuto al ciclo: {n} veicoli passati in {d}.','v.okRed':' {n} scontri causati da chi è passato col rosso.',
+ 'cv.fromA':'DA A  →','cv.fromB':'←  DA B','cv.red':'ROSSO!','ch.r':'R','ch.y':'G','ch.g':'V','ch.none':'Nessun LED acceso nel periodo simulato.'
+},
+en:{
+ 'hdr.title':'Alternating One-Way','hdr.sub':'1 km bridge · one lane · two traffic lights driven by Arduino',
+ 'tab.sim':'Simulator','tab.hw':'Assignment','aria.road':'Simulation of the bridge with vehicles','led.A':'Light A','led.B':'Light B',
+ 'clock':'simulated real time','btn.run':'▶ Run code','btn.pause':'❚❚ Pause','btn.resume':'▶ Resume','btn.restart':'↺ Restart','btn.skip':'⏭ Skip to end','speed':'Speed',
+ 'tile.pa':'Crossed A → B','tile.pb':'Crossed B → A','tile.wait':'Average wait','tile.q':'Longest queue','tile.cc':'Crashes: light cycle','tile.cr':'Crashes: red-light','tile.run':'Red-light runners',
+ 'code.h':'Student code','aria.example':'Load an example','ex.load':'Load example…','ex.wrong':'Example with a bug (1:10)','ex.ok':'Basic solution (real time)','ex.millis':'Advanced version with millis() (1:10)',
+ 'aria.code':'Arduino code','code.note':'Paste the sketch as it is from Tinkercad and press <b>Run code</b>. If the first line has the comment <code>// SCALE 1:10</code>, the time scale is set automatically.',
+ 'code.js':'Show the translated code (to understand errors)','chrono.h':'LED timing diagram','aria.chrono':'LED on/off timing diagram',
+ 'chrono.note':'Hatched bands are the <b>all red</b> phases, when both lights are red.',
+ 'set.h':'Settings','set.detect':'Detect pins from code','pin.r':'Red','pin.y':'Yellow','pin.g':'Green',
+ 'set.scale':'Time scale in the code','sc1':'1 s in code = 1 s real','sc10':'1 s in code = 10 s real (1:10)','sc60':'1 s in code = 1 min real (1:60)',
+ 'set.dur':'Simulation length','dur10':'10 minutes','dur20':'20 minutes','dur30':'30 minutes','dur60':'60 minutes',
+ 'set.rate':'Vehicles arriving per side:','set.red':'Red-light runners:','set.vmode':'Vehicle speed','v30':'All at 30 km/h','v20':'Mixed 20–30 km/h','set.seed':'Traffic (random seed)',
+ 'set.note':'With the same seed the traffic is identical for everyone, so different sketches are compared under the same conditions. After a change, press <b>Run code</b> again.',
+ 'err.loop':'The program runs too many operations without letting time pass: is there an infinite loop without delay()?',
+ 'err.syntax':'Syntax error: {m}. Check braces, semicolons and variable names.',
+ 'err.nofn':'Cannot find the setup() and loop() functions.','err.run':'Runtime error: {m}',
+ 'log.scale':'Time scale set to 1:{n} from the comment in the code.','log.scaleNo':'Scale 1:{n} is not available: choose the scale manually.',
+ 'log.pins':'Pins detected from names in the code: A {a}, B {b}.','log.pinsPart':'Detected {n} of 6 pins from names: check the settings.',
+ 'log.ledoff':'The traffic light LEDs never turn on. Check that the pins in the code match the ones in Settings.',
+ 'log.crash':'{t}  Head-on crash {x} m from A ({n} vehicles stuck on the bridge) — ','log.crashCycle':'both entered legally: the cycle does not leave time to clear the bridge.','log.crashRed':'a vehicle entered on red.',
+ 'log.end':'Simulation finished.',
+ 'v.code':'⚠ The code does not work. Check the console for details.','v.led':'⚠ The traffic light LEDs never turn on. Check the console for details.',
+ 'v.err':'✗ Unsafe cycle: {n} head-on crashes between vehicles that entered legally.','v.errRed':' {n} more caused by red-light runners.',
+ 'v.none':'⚠ No crashes, but no vehicle managed to cross the bridge.',
+ 'v.ok':'✓ No crashes caused by the cycle: {n} vehicles crossed in {d}.','v.okRed':' {n} crashes caused by red-light runners.',
+ 'cv.fromA':'FROM A  →','cv.fromB':'←  FROM B','cv.red':'RED!','ch.r':'R','ch.y':'Y','ch.g':'G','ch.none':'No LED turned on during the simulated time.'
+}};
+let LANG = 'it';
+try { const sv = localStorage.getItem('sua-lang'); LANG = sv === 'it' || sv === 'en' ? sv : (/^it\b/i.test(navigator.language || '') ? 'it' : 'en'); }
+catch(e){ LANG = /^it\b/i.test(navigator.language || '') ? 'it' : 'en'; }
+const tr = (k, v) => { let s = (I18N[LANG] && I18N[LANG][k]) || I18N.it[k] || k; if(v) for(const n in v) s = s.split('{' + n + '}').join(v[n]); return s; };
+const EX = () => LANG === 'en' ? EX_EN : EX_IT;
+
+/* ---------- Conversione C/Arduino -> JS ---------- */
+const TYPE = '(?:unsigned\\s+long\\s+long|unsigned\\s+long|unsigned\\s+int|unsigned\\s+char|unsigned\\s+short|unsigned|signed|long\\s+long|long|int|short|float|double|bool|boolean|byte|char|String|word|size_t|u?int(?:8|16|32|64)_t)';
+const QUAL = '(?:(?:const|static|volatile|inline|constexpr)\\s+)*';
+function cleanParams(p){
+  p = p.trim(); if(!p || p === 'void') return '';
+  return p.split(',').map(x => x.replace(/=.*/,'').replace(/[\[\]&*]/g,' ').trim().split(/\s+/).pop()).join(', ');
+}
+function matchBrace(s, i){ let d=0; for(let k=i;k<s.length;k++){ if(s[k]==='{') d++; else if(s[k]==='}'){ d--; if(!d) return k; } } return -1; }
+function transpile(src){
+  let s = src.replace(/\r/g,'');
+  s = s.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, '');
+  s = s.replace(/^\s*#include[^\n]*/gm, '');
+  s = s.replace(/^\s*#define\s+(\w+)\s+([^\n]+)/gm, (m,n,v) => `var ${n} = ${v.trim().replace(/;$/,'')};`);
+  s = s.replace(/^\s*#define\s+(\w+)\s*$/gm, 'var $1 = 1;');
+  s = s.replace(new RegExp('\\(\\s*'+TYPE+'\\s*\\)','g'), '');
+  s = s.replace(/\b(\d+(?:\.\d+)?)(?:UL|ul|LU|lu|L|l|U|u|f|F)\b/g, '$1');
+  s = s.replace(new RegExp('\\b'+QUAL+'(?:void|'+TYPE+')\\s*\\*?\\s+([A-Za-z_]\\w*)\\s*\\(([^)]*)\\)\\s*\\{','g'), (m,n,p) => `function ${n}(${cleanParams(p)}) {`);
+  s = s.replace(new RegExp('\\b'+QUAL+'(?:void|'+TYPE+')\\s*\\*?\\s+([A-Za-z_]\\w*)\\s*\\([^)]*\\)\\s*;','g'), '');
+  s = s.replace(new RegExp('\\b'+QUAL+TYPE+'\\s*\\*?\\s+(?=[A-Za-z_])','g'), 'var ');
+  // array con inizializzatore
+  let re = /\bvar\s+([A-Za-z_]\w*)\s*(?:\[[^\]]*\]\s*)+=\s*\{/g, m;
+  while((m = re.exec(s))){
+    const open = s.indexOf('{', m.index + m[0].length - 1), close = matchBrace(s, open);
+    if(close < 0) break;
+    const inner = s.slice(open, close+1).replace(/\{/g,'[').replace(/\}/g,']');
+    s = s.slice(0, m.index) + `var ${m[1]} = ` + inner + s.slice(close+1);
+    re.lastIndex = m.index + 4;
+  }
+  s = s.replace(/\bvar\s+([A-Za-z_]\w*)\s*\[[^\]]*\]\s*=\s*"/g, 'var $1 = "');
+  s = s.replace(/\bvar\s+([A-Za-z_]\w*)\s*\[\s*([^\]]+)\]\s*;/g, 'var $1 = new Array($2).fill(0);');
+  return s;
+}
+
+/* ---------- Esecuzione con orologio virtuale ---------- */
+function runArduino(src, horizonMs){
+  const js = transpile(src);
+  const events = [], modes = {}, logs = [], pin = {};
+  let t = 0, ops = 0, lineBuf = '';
+  const STOP = {stop:true};
+  const tick = () => { if(++ops > 3e7) throw new Error(tr('err.loop')); };
+  const P = p => { const n = typeof p === 'string' && /^A\d$/.test(p) ? 14 + +p[1] : +p; return n; };
+  const dW = (p,v) => { tick(); p = P(p); v = v ? 1 : 0; if(pin[p] !== v){ pin[p] = v; events.push({t, p, v}); } };
+  const out = x => { lineBuf += String(x); if(lineBuf.length > 300) lineBuf = lineBuf.slice(0,300); };
+  const flush = () => { if(logs.length < 300) logs.push({t, msg: lineBuf}); lineBuf = ''; };
+  const rt = {
+    pinMode:(p,m)=>{ tick(); modes[P(p)] = m; },
+    digitalWrite: dW,
+    digitalRead: p => { tick(); return pin[P(p)] || 0; },
+    analogWrite: (p,v) => dW(p, v > 127),
+    analogRead: () => 0,
+    delay: ms => { tick(); t += Math.max(0, +ms || 0); if(t > horizonMs) throw STOP; },
+    delayMicroseconds: us => { tick(); t += Math.max(0, +us || 0) / 1000; },
+    millis: () => { tick(); t += 1; if(t > horizonMs) throw STOP; return Math.floor(t); },
+    micros: () => { tick(); t += 0.05; if(t > horizonMs) throw STOP; return Math.floor(t*1000); },
+    Serial: { begin(){}, end(){}, print(x){ out(x); }, println(x){ if(x !== undefined) out(x); flush(); }, available:()=>0, read:()=>-1, write(x){ out(x); } },
+    HIGH:1, LOW:0, OUTPUT:'OUTPUT', INPUT:'INPUT', INPUT_PULLUP:'INPUT_PULLUP', LED_BUILTIN:13,
+    A0:14, A1:15, A2:16, A3:17, A4:18, A5:19, DEC:10, HEX:16, BIN:2, OCT:8,
+    random: (a,b) => b === undefined ? Math.floor(Math.random()*a) : a + Math.floor(Math.random()*(b-a)),
+    randomSeed: () => {}, constrain: (x,a,b) => Math.min(b, Math.max(a, x)),
+    map: (x,a,b,c,d) => Math.trunc((x-a)*(d-c)/(b-a)+c), min: Math.min, max: Math.max, abs: Math.abs,
+    sqrt: Math.sqrt, pow: Math.pow, tone(){}, noTone(){}, bitRead:(x,n)=>(x>>n)&1
+  };
+  const names = Object.keys(rt);
+  let fn, error = null;
+  try {
+    fn = new Function(...names, js + '\n;return {setup: typeof setup === "function" ? setup : null, loop: typeof loop === "function" ? loop : null};');
+  } catch(e) {
+    return {js, events, modes, logs, error: tr('err.syntax', {m: e.message})};
+  }
+  try {
+    const prog = fn(...names.map(n => rt[n]));
+    if(!prog.loop && !prog.setup) throw new Error(tr('err.nofn'));
+    if(prog.setup) prog.setup();
+    if(prog.loop){
+      while(t < horizonMs){ const t0 = t; prog.loop(); if(t === t0) t += 1; }
+    }
+  } catch(e) {
+    if(e !== STOP) error = (e && e.message) ? tr('err.run', {m: e.message}) : String(e);
+  }
+  if(lineBuf) flush();
+  return {js, events, modes, logs, error};
+}
+
+/* ---------- Riconoscimento dei pin dai nomi ---------- */
+function detectPins(src){
+  const s = src.replace(/\/\*[\s\S]*?\*\//g,' ').replace(/\/\/[^\n]*/g,'');
+  const found = [], seen = new Set();
+  const add = (n, v) => { v = /^A\d$/.test(v) ? 14 + +v[1] : +v; if(!seen.has(n) && v >= 0 && v <= 19){ seen.add(n); found.push({n, v}); } };
+  let m; const r1 = /#define\s+(\w+)\s+(A?\d+)\b/g; while((m = r1.exec(s))) add(m[1], m[2]);
+  const r2 = /\b([A-Za-z_]\w*)\s*=\s*(A?\d+)\s*[,;]/g; while((m = r2.exec(s))) add(m[1], m[2]);
+  const anyV = found.some(f => partsFor(f.n).includes('V'));
+  const res = {}; const order = {r:[], y:[], g:[]};
+  for(const f of found){
+    const parts = partsFor(f.n); let c = null;
+    for(const p of parts){
+      if(/^(ROSS|RED)/.test(p) || p === 'R') c = 'r';
+      else if(/^(GIAL|YEL|ARANC|AMBER)/.test(p) || p === 'Y') c = 'y';
+      else if(/^(VERD|GREEN)/.test(p) || p === 'V') c = 'g';
+      else if(p === 'G') c = anyV ? 'y' : 'g';
+      if(c) break;
+    }
+    if(!c) continue;
+    let side = null;
+    for(const p of parts){
+      if(['A','1','SX','NORD','OVEST','SINISTRA','LEFT','W','N'].includes(p)) side = 'A';
+      else if(['B','2','DX','SUD','EST','DESTRA','RIGHT','E','S'].includes(p)) side = 'B';
+    }
+    const dg = f.n.match(/(\d)(?!.*\d)/); if(!side && dg) side = dg[1] === '1' ? 'A' : dg[1] === '2' ? 'B' : null;
+    if(side && res[side + c] === undefined) res[side + c] = f.v; else order[c].push(f.v);
+  }
+  for(const c of ['r','y','g']) for(const sd of ['A','B']) if(res[sd+c] === undefined && order[c].length) res[sd+c] = order[c].shift();
+  return res;
+}
+function partsFor(n){ const two = n.toUpperCase().match(/^(?:LED_?)?([RGVY])_?([AB12])$/); return two ? [two[1], two[2]] : partsOf(n); }
+function partsOf(n){ return n.replace(/([a-z])([A-Z])/g,'$1_$2').replace(/([A-Za-z])(\d)/g,'$1_$2').replace(/(\d)([A-Za-z])/g,'$1_$2').toUpperCase().split(/_+/).filter(Boolean); }
+
+/* ---------- Timeline luci ---------- */
+function makeTimeline(events, roles, scale, horizon){
+  const map = {};
+  for(const r of ROLES){ (map[roles[r]] = map[roles[r]] || []).push(r); }
+  const ev = events.filter(e => map[e.p]).map(e => ({t: e.t / 1000 * scale, p: e.p, v: e.v}));
+  const tl = { ev, map, horizon, idx:0, s:{}, reset(){ this.idx = 0; this.s = {}; ROLES.forEach(r => this.s[r] = 0); },
+    at(t){ while(this.idx < ev.length && ev[this.idx].t <= t){ const e = ev[this.idx++]; for(const r of map[e.p]) this.s[r] = e.v; } return this.s; } };
+  tl.reset(); return tl;
+}
+const allowed = (s, side) => !!(s[side+'g'] || s[side+'y']);
+
+/* ---------- Analisi statica del ciclo ---------- */
+function fmt(sec){ sec = Math.round(sec); if(sec < 60) return sec + ' s'; const m = Math.floor(sec/60), s = sec % 60; return m + ' min ' + String(s).padStart(2,'0') + ' s'; }
+function intervals(segs, test){
+  const out = []; let cur = null;
+  for(const g of segs){ if(test(g.s)){ if(cur && Math.abs(cur[1]-g.t0) < 1e-6) cur[1] = g.t1; else { cur = [g.t0, g.t1]; out.push(cur); } } else cur = null; }
+  return out;
+}
+function analyze(tl, run, cfg){
+  const items = [], kv = [];
+  const req = BRIDGE / (cfg.vmin / 3.6);
+  if(run.error) items.push({lvl:'err', t:'Il codice non funziona', d:run.error});
+  const T = tl.horizon;
+  if(!tl.ev.length){ items.push({lvl:'err', t:'I LED dei semafori non si accendono mai', d:'Controlla che i pin nel codice corrispondano a quelli impostati qui sotto.'}); return {items, kv, segs:[], req, clear:[]}; }
+  const segs = []; const s = {}; ROLES.forEach(r => s[r] = 0); let prev = 0;
+  for(const e of tl.ev){ if(e.t > prev){ segs.push({t0:prev, t1:e.t, s:{...s}}); prev = e.t; } for(const r of tl.map[e.p]) s[r] = e.v; }
+  if(T > prev) segs.push({t0:prev, t1:T, s:{...s}});
+  const startT = tl.ev[0].t;
+  // pinMode
+  const miss = ROLES.filter(r => run.modes[cfg.roles[r]] !== 'OUTPUT').map(r => cfg.roles[r]);
+  if(miss.length) items.push({lvl:'warn', t:'pinMode(…, OUTPUT) mancante', d:'Pin senza pinMode: ' + [...new Set(miss)].join(', ') + '. Su Arduino vero il LED si accenderebbe appena.'});
+  // sovrapposizione
+  const ov = segs.find(g => g.t1 - g.t0 > 0.05 && allowed(g.s,'A') && allowed(g.s,'B'));
+  if(ov) items.push({lvl:'err', t:'A e B possono passare insieme', d:'Verde o giallo acceso su entrambi i semafori a ' + fmt(ov.t0) + '.'});
+  // combinazioni strane
+  for(const sd of ['A','B']){
+    const both = segs.find(g => g.t1 - g.t0 > 0.05 && g.s[sd+'r'] && (g.s[sd+'g'] || g.s[sd+'y']));
+    if(both) items.push({lvl:'warn', t:'Semaforo ' + sd + ': rosso acceso insieme a verde/giallo', d:'A ' + fmt(both.t0) + '. Gli automobilisti non sanno cosa fare.'});
+    const dark = segs.find(g => g.t0 >= startT && g.t1 - g.t0 > 0.5 && !g.s[sd+'r'] && !g.s[sd+'g'] && !g.s[sd+'y']);
+    if(dark) items.push({lvl:'warn', t:'Semaforo ' + sd + ' spento per ' + fmt(dark.t1 - dark.t0), d:'Da ' + fmt(dark.t0) + '. I veicoli si fermano come col rosso.'});
+  }
+  // fasi
+  const allowA = intervals(segs, x => allowed(x,'A')), allowB = intervals(segs, x => allowed(x,'B'));
+  const greenA = intervals(segs, x => x.Ag), greenB = intervals(segs, x => x.Bg);
+  const yelA = intervals(segs, x => x.Ay && !x.Ag), yelB = intervals(segs, x => x.By && !x.Bg);
+  const full = arr => arr.filter(i => i[1] < T - 1e-6);
+  const avg = arr => arr.length ? arr.reduce((a,i) => a + i[1] - i[0], 0) / arr.length : 0;
+  if(!greenA.length || !greenB.length) items.push({lvl:'err', t:'Il verde non arriva a entrambi i lati', d: !greenA.length ? 'Il verde di A non si accende mai.' : 'Il verde di B non si accende mai.'});
+  if(greenA.length && !yelA.length) items.push({lvl:'warn', t:'Semaforo A senza giallo', d:'Chi arriva vicino alla linea non ha preavviso.'});
+  if(greenB.length && !yelB.length) items.push({lvl:'warn', t:'Semaforo B senza giallo', d:'Chi arriva vicino alla linea non ha preavviso.'});
+  // sgombero
+  const all = allowA.map(i => ({i, s:'A'})).concat(allowB.map(i => ({i, s:'B'}))).sort((a,b) => a.i[0] - b.i[0]);
+  const clear = []; const minC = {AB:Infinity, BA:Infinity};
+  for(let k = 1; k < all.length; k++){
+    const a = all[k-1], b = all[k];
+    if(a.s !== b.s){ const g = b.i[0] - a.i[1]; clear.push({t0:a.i[1], t1:b.i[0], from:a.s}); const key = a.s + b.s; if(g < minC[key]) minC[key] = g; }
+  }
+  const worst = Math.min(minC.AB, minC.BA);
+  if(isFinite(worst)){
+    if(worst < 0) {/* già segnalato come sovrapposizione */}
+    else if(worst + 0.05 < req) items.push({lvl:'err', t:'Tutto rosso troppo breve', d:'Il più corto dura ' + fmt(worst) + ', ma un veicolo a ' + cfg.vmin + ' km/h impiega ' + fmt(req) + ' per attraversare il ponte.'});
+    else items.push({lvl:'ok', t:'Tutto rosso sufficiente', d:'Il più corto dura ' + fmt(worst) + ' (minimo ' + fmt(req) + ').'});
+  }
+  if(!ov && greenA.length && greenB.length) items.push({lvl:'ok', t:'Mai verde su entrambi i lati', d:'A e B non hanno mai il via libera nello stesso momento.'});
+  const starts = greenA.map(i => i[0]); let cyc = 0;
+  if(starts.length > 1) cyc = (starts[starts.length-1] - starts[0]) / (starts.length - 1);
+  kv.push(['Percorrenza ponte', fmt(req)]);
+  kv.push(['Verde A (medio)', greenA.length ? fmt(avg(full(greenA).length ? full(greenA) : greenA)) : '–']);
+  kv.push(['Verde B (medio)', greenB.length ? fmt(avg(full(greenB).length ? full(greenB) : greenB)) : '–']);
+  kv.push(['Giallo', yelA.length || yelB.length ? fmt(avg(yelA.concat(yelB))) : '–']);
+  kv.push(['Tutto rosso A→B', isFinite(minC.AB) ? (minC.AB < 0 ? 'sovrapposto' : fmt(minC.AB)) : '–']);
+  kv.push(['Tutto rosso B→A', isFinite(minC.BA) ? (minC.BA < 0 ? 'sovrapposto' : fmt(minC.BA)) : '–']);
+  kv.push(['Durata ciclo', cyc ? fmt(cyc) : '–']);
+  const order = {err:0, warn:1, ok:2};
+  items.sort((a,b) => order[a.lvl] - order[b.lvl]);
+  return {items, kv, segs, req, clear, cyc, startT};
+}
+
+/* ---------- Simulazione veicoli ---------- */
+function mulberry(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function makeSim(cfg, tl){
+  const rng = {A: mulberry(cfg.seed * 7919 + 1), B: mulberry(cfg.seed * 104729 + 3)};
+  const lam = cfg.rate / 60;
+  const expo = sd => -Math.log(1 - rng[sd]()) / lam;
+  const sim = { t:0, veh:{A:[], B:[]}, next:{A:expo('A'), B:expo('B')}, id:0, incidents:[], crossed:{A:0,B:0}, waits:[], maxQ:0, runners:0, lights:null, flashes:[] };
+  tl.reset();
+  const spawn = sd => {
+    const runner = rng[sd]() < cfg.red, vr = rng[sd]();
+    const v = cfg.vmin >= 30 ? 30/3.6 : (cfg.vmin + vr * (30 - cfg.vmin)) / 3.6;
+    const arr = sim.veh[sd], last = arr[arr.length - 1];
+    let pos = -APP, cv = VAPP;
+    if(last){ const need = last.pos - (LEN + S0 + Math.min(VAPP, last.cv) * HW); if(need < pos){ pos = need; cv = Math.min(VAPP, last.cv); } }
+    arr.push({id: sim.id++, side: sd, pos, v, cv, runner, entered:false, wait:0, crash:false, color: sim.id % 8, entryColor:null, commitY:null});
+  };
+  sim.step = dt => {
+    sim.t += dt;
+    const L = tl.at(sim.t); sim.lights = L;
+    for(const sd of ['A','B']) while(sim.t >= sim.next[sd]){ spawn(sd); sim.next[sd] += expo(sd); }
+    for(const sd of ['A','B']){
+      const arr = sim.veh[sd]; let q = 0;
+      const g = L[sd+'g'], y = L[sd+'y'] && !g, r = L[sd+'r'];
+      for(let i = 0; i < arr.length; i++){
+        const c = arr[i]; if(c.crash){ c.cv = 0; continue; }
+        let vmax = c.pos < 0 ? VAPP : c.v, hard = Infinity;
+        if(i > 0){
+          const ld = arr[i-1], gap = ld.pos - c.pos - LEN - S0;
+          vmax = Math.min(vmax, Math.max(0, gap / HW));
+          hard = ld.pos - LEN - 0.5;
+        }
+        if(!c.entered){
+          let ok = false, how = 'verde';
+          if(g){ ok = true; c.commitY = null; }
+          else if(y){ if(c.commitY === null) c.commitY = c.cv * c.cv / (2 * DEC) > -c.pos + 0.5; ok = c.commitY; how = 'giallo'; }
+          else { c.commitY = null; }
+          if(!ok && c.runner && (r || y)){ ok = true; how = 'rosso'; }
+          if(!ok && !g && !y && !r && c.runner){ ok = true; how = 'rosso'; }
+          c._how = how;
+          if(!ok){ vmax = Math.min(vmax, Math.sqrt(Math.max(0, 2 * DEC * -c.pos))); hard = Math.min(hard, 0); }
+        }
+        const nv = Math.max(0, Math.min(c.cv + ACC * dt, vmax));
+        let np = Math.min(c.pos + nv * dt, hard); if(np < c.pos) np = c.pos;
+        c.cv = (np - c.pos) / dt;
+        if(!c.entered && np > 0){ c.entered = true; c.entryColor = c._how; c.entryT = sim.t; sim.waits.push(c.wait); if(c._how === 'rosso'){ sim.runners++; sim.flashes.push({id:c.id, until: sim.t + 25}); } }
+        if(!c.entered){ if(c.cv < 0.5) c.wait += dt; q++; }
+        c.pos = np;
+      }
+      if(q > sim.maxQ) sim.maxQ = q;
+      while(arr.length && (arr[0].pos > BRIDGE + EXIT || (arr[0].crash && sim.t >= arr[0].clearAt))){ const c = arr.shift(); if(!c.crash) sim.crossed[sd]++; }
+      for(let i = arr.length - 1; i >= 0; i--) if(arr[i].crash && sim.t >= arr[i].clearAt) arr.splice(i, 1);
+    }
+    for(const a of sim.veh.A){ if(a.crash || a.pos <= 0 || a.pos > BRIDGE) continue;
+      for(const b of sim.veh.B){ if(b.crash || b.pos <= 0 || b.pos > BRIDGE) continue;
+        if(a.pos + b.pos >= BRIDGE - 4){
+          const cause = (a.entryColor === 'rosso' || b.entryColor === 'rosso') ? 'rosso' : 'ciclo';
+          let n = 0;
+          for(const sd of ['A','B']) for(const c of sim.veh[sd]) if(!c.crash && c.pos > 0 && c.pos <= BRIDGE){ c.crash = true; c.clearAt = sim.t + 20; n++; }
+          sim.incidents.push({t: sim.t, x: a.pos, cause, until: sim.t + 20, n});
+          log((cause === 'ciclo' ? 'e' : 'w'), tr('log.crash', {t: clockStr(sim.t), x: Math.round(a.pos), n}) + (cause === 'ciclo' ? tr('log.crashCycle') : tr('log.crashRed')));
+          break;
+        } } }
+    sim.flashes = sim.flashes.filter(f => f.until > sim.t);
+  };
+  return sim;
+}
+
+/* ---------- Stato UI ---------- */
+const road = $('#road'), rc = road.getContext('2d');
+const chrono = $('#chrono'), cc = chrono.getContext('2d');
+let lastRun = null, verdictState = null, curEx = 'wrong';
+let sim = null, tl = null, ana = null, cfgCur = null, playing = false, acc = 0, lastTs = 0, finished = false;
+const consoleEl = $('#console');
+function log(cls, msg){ const d = document.createElement('div'); d.className = cls; d.textContent = msg; consoleEl.appendChild(d); if(consoleEl.childNodes.length > 400) consoleEl.removeChild(consoleEl.firstChild); consoleEl.scrollTop = consoleEl.scrollHeight; }
+function clockStr(t){ t = Math.floor(t); const h = Math.floor(t/3600), m = Math.floor(t/60) % 60, s = t % 60; return (h ? h + ':' : '') + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0'); }
+
+const pinOpts = Array.from({length:20}, (_,i) => i < 14 ? String(i) : 'A' + (i-14));
+const DEF = {Ar:13, Ay:12, Ag:11, Br:10, By:9, Bg:8};
+for(const r of ROLES){ const sel = $('#pin-'+r); pinOpts.forEach((n,i) => { const o = document.createElement('option'); o.value = i; o.textContent = n; sel.appendChild(o); }); sel.value = DEF[r]; sel.addEventListener('change', syncPinLabels); }
+function syncPinLabels(){ for(const r of ROLES) $('#P-'+r).textContent = pinOpts[+$('#pin-'+r).value]; }
+syncPinLabels();
+$('#rate').addEventListener('input', e => $('#o-rate').textContent = e.target.value);
+$('#red').addEventListener('input', e => $('#o-red').textContent = e.target.value);
+
+function readCfg(){
+  const roles = {}; for(const r of ROLES) roles[r] = +$('#pin-'+r).value;
+  return { roles, scale: +$('#scale').value, dur: +$('#dur').value * 60, rate: +$('#rate').value, red: +$('#red').value / 100, vmin: +$('#vmode').value, seed: (+$('#seed').value || 1) };
+}
+function applyAutoFromCode(src, quiet){
+  const m = src.match(/SCAL[AE]\s*1\s*[:\/]\s*(\d+)/i);
+  if(m && $('#scale').querySelector(`option[value="${m[1]}"]`)){ $('#scale').value = m[1]; if(!quiet) log('i', tr('log.scale', {n: m[1]})); }
+  else if(m && !quiet) log('w', tr('log.scaleNo', {n: m[1]}));
+}
+function detectAndApply(src, quiet){
+  const d = detectPins(src); const n = Object.keys(d).length;
+  for(const r of ROLES) if(d[r] !== undefined) $('#pin-'+r).value = d[r];
+  syncPinLabels();
+  if(!quiet) log(n === 6 ? 'i' : 'w', n === 6 ? tr('log.pins', {a: ['Ar','Ay','Ag'].map(r => pinOpts[d[r]]).join('/'), b: ['Br','By','Bg'].map(r => pinOpts[d[r]]).join('/')}) : tr('log.pinsPart', {n}));
+  return n;
+}
+
+function execute(autoplay = true){
+  consoleEl.textContent = '';
+  const src = $('#code').value;
+  applyAutoFromCode(src);
+  const cfg = readCfg(); cfgCur = cfg;
+  const horizonMs = cfg.dur * 1000 / cfg.scale + 1;
+  const run = runArduino(src, horizonMs);
+  $('#jsout').textContent = run.js;
+  if(run.error) log('e', run.error);
+  for(const l of run.logs.slice(0,120)) log('i', '[Serial ' + clockStr(l.t / 1000 * cfg.scale) + '] ' + l.msg);
+  tl = makeTimeline(run.events, cfg.roles, cfg.scale, cfg.dur);
+  ana = analyze(tl, run, cfg);
+  renderAnalysis();
+  lastRun = run;
+  if(!run.error && !tl.ev.length) log('e', tr('log.ledoff'));
+  sim = makeSim(cfg, tl); sim.step(0.0001);
+  finished = false; $('#verdict').hidden = true; acc = 0;
+  playing = autoplay; verdictState = null; setPauseLabel();
+  drawChrono(); updateStats();
+}
+
+function renderAnalysis(){
+  const ul = $('#checks'); if(!ul) return; ul.textContent = '';
+  const lbl = {ok:'ok', warn:'attenzione', err:'errore'};
+  for(const it of ana.items){
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="pill ${it.lvl}">${lbl[it.lvl]}</span><div><b></b><small></small></div>`;
+    li.querySelector('b').textContent = it.t; li.querySelector('small').textContent = it.d;
+    ul.appendChild(li);
+  }
+  const kv = $('#kv'); kv.textContent = '';
+  for(const [k,v] of ana.kv){ const d = document.createElement('div'); d.innerHTML = '<span></span><b></b>'; d.firstChild.textContent = k; d.lastChild.textContent = v; kv.appendChild(d); }
+}
+
+function updateStats(){
+  if(!sim) return;
+  $('#s-pa').textContent = sim.crossed.A; $('#s-pb').textContent = sim.crossed.B;
+  $('#s-wait').textContent = sim.waits.length ? fmt(sim.waits.reduce((a,b) => a+b, 0) / sim.waits.length) : '–';
+  $('#s-q').textContent = sim.maxQ;
+  const ncy = sim.incidents.filter(i => i.cause === 'ciclo').length, nr = sim.incidents.length - ncy;
+  $('#s-cc').textContent = ncy; $('#s-cr').textContent = nr; $('#s-run').textContent = sim.runners;
+  $('#t-cc').className = 'tile ' + (ncy ? 'bad' : 'good'); $('#t-cr').className = 'tile' + (nr ? ' bad' : '');
+  $('#clock').textContent = clockStr(sim.t);
+  $('#prog').style.width = Math.min(100, sim.t / cfgCur.dur * 100) + '%';
+  const L = sim.lights || {};
+  for(const r of ROLES) $('#L-'+r).classList.toggle('on', !!L[r]);
+}
+
+function finish(){
+  finished = true; playing = false; setPauseLabel();
+  const ncy = sim.incidents.filter(i => i.cause === 'ciclo').length, nr = sim.incidents.length - ncy;
+  const tot = sim.crossed.A + sim.crossed.B;
+  if(lastRun && lastRun.error) verdictState = {k:'code'};
+  else if(!tl.ev.length) verdictState = {k:'led'};
+  else if(ncy) verdictState = {k:'err', ncy, nr};
+  else if(!tot) verdictState = {k:'none'};
+  else verdictState = {k:'ok', tot, nr};
+  renderVerdict();
+  log('i', tr('log.end'));
+}
+function renderVerdict(){
+  const v = $('#verdict'), st = verdictState;
+  if(!st){ v.hidden = true; return; }
+  v.hidden = false;
+  if(st.k === 'code'){ v.className = 'verdict warn'; v.textContent = tr('v.code'); }
+  else if(st.k === 'led'){ v.className = 'verdict warn'; v.textContent = tr('v.led'); }
+  else if(st.k === 'err'){ v.className = 'verdict err'; v.textContent = tr('v.err', {n: st.ncy}) + (st.nr ? tr('v.errRed', {n: st.nr}) : ''); }
+  else if(st.k === 'none'){ v.className = 'verdict warn'; v.textContent = tr('v.none'); }
+  else { v.className = 'verdict ok'; v.textContent = tr('v.ok', {n: st.tot, d: fmt(cfgCur.dur)}) + (st.nr ? tr('v.okRed', {n: st.nr}) : ''); }
+}
+function setPauseLabel(){ $('#pause').textContent = playing ? tr('btn.pause') : tr('btn.resume'); }
+
+/* ---------- Disegno strada ---------- */
+let css = {};
+function readCss(){ const cs = getComputedStyle(document.documentElement); ['grass','grass2','asphalt','mark','water','water2','rail','ink','muted','err','accent','led-r','led-y','led-g','led-off','panel'].forEach(k => css[k] = cs.getPropertyValue('--'+k).trim()); }
+readCss();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readCss(); drawChrono(); });
+new MutationObserver(() => { readCss(); drawChrono(); }).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+
+function fit(cv, ctx){ const dpr = window.devicePixelRatio || 1; const w = cv.clientWidth, h = cv.clientHeight; if(cv.width !== Math.round(w*dpr) || cv.height !== Math.round(h*dpr)){ cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr); } ctx.setTransform(dpr,0,0,dpr,0,0); return [w,h]; }
+const CARS = ['#3D7DD8','#E06C3C','#8E5BD0','#2BA39A','#D8B13D','#C9457A','#6A8F2E','#E4E4DE'];
+
+function geo(W, H){
+  const narrow = W < 640;
+  const lw = narrow ? 18 : 24, yM = H * 0.5;
+  const xS = W * (narrow ? 0.24 : 0.2), xB0 = xS + W * 0.04, xB1 = W - xB0, xE = W - xS;
+  const pxApp = (xS - 8) / APP;
+  return {W, H, lw, yM, xS, xB0, xB1, xE, pxApp, bw: lw * 1.25, narrow};
+}
+function carXY(G, side, pos){
+  let x, y; const lane = G.lw / 2;
+  if(pos <= 0){ x = G.xS + pos * G.pxApp; y = G.yM + lane; }
+  else if(pos <= BRIDGE){
+    x = G.xS + pos / BRIDGE * (G.xE - G.xS);
+    const f1 = Math.min(1, (x - G.xS) / (G.xB0 - G.xS)), f2 = Math.min(1, Math.max(0, (G.xE - x) / (G.xE - G.xB1)));
+    y = G.yM + lane * (1 - Math.min(f1, f2));
+  } else { x = G.xE + (pos - BRIDGE) * G.pxApp; y = G.yM + lane; }
+  if(side === 'B'){ x = G.W - x; y = 2 * G.yM - y; }
+  return [x, y];
+}
+function drawRoad(now){
+  const [W, H] = fit(road, rc); const G = geo(W, H);
+  rc.clearRect(0,0,W,H);
+  rc.fillStyle = css.grass; rc.fillRect(0,0,W,H);
+  // acqua
+  rc.fillStyle = css.water; rc.fillRect(G.xB0 + 6, 0, G.xB1 - G.xB0 - 12, H);
+  rc.strokeStyle = css.water2; rc.lineWidth = 2;
+  const ph = now / 1400;
+  for(let row = 0; row < 7; row++){ const yy = 18 + row * (H - 30) / 6; if(Math.abs(yy - G.yM) < G.bw) continue; rc.beginPath();
+    for(let x = G.xB0 + 14; x < G.xB1 - 14; x += 6){ const v = Math.sin(x / 26 + ph + row) * 3; x === G.xB0 + 14 ? rc.moveTo(x, yy + v) : rc.lineTo(x, yy + v); } rc.stroke(); }
+  // asfalto
+  const h2 = G.lw, hb = G.bw / 2;
+  rc.fillStyle = css.asphalt; rc.beginPath();
+  rc.moveTo(0, G.yM - h2); rc.lineTo(G.xS, G.yM - h2); rc.lineTo(G.xB0, G.yM - hb); rc.lineTo(G.xB1, G.yM - hb); rc.lineTo(G.xE, G.yM - h2); rc.lineTo(W, G.yM - h2);
+  rc.lineTo(W, G.yM + h2); rc.lineTo(G.xE, G.yM + h2); rc.lineTo(G.xB1, G.yM + hb); rc.lineTo(G.xB0, G.yM + hb); rc.lineTo(G.xS, G.yM + h2); rc.lineTo(0, G.yM + h2); rc.closePath(); rc.fill();
+  // parapetti e tacche ogni 100 m
+  rc.strokeStyle = css.rail; rc.lineWidth = 3;
+  rc.beginPath(); rc.moveTo(G.xB0, G.yM - hb - 2); rc.lineTo(G.xB1, G.yM - hb - 2); rc.moveTo(G.xB0, G.yM + hb + 2); rc.lineTo(G.xB1, G.yM + hb + 2); rc.stroke();
+  rc.fillStyle = css.ink; rc.font = '600 11px "JetBrains Mono", monospace'; rc.textAlign = 'center';
+  for(let m = 0; m <= 1000; m += 100){ const x = G.xS + m / BRIDGE * (G.xE - G.xS); rc.fillStyle = css.rail; rc.fillRect(x - 1, G.yM + hb + 2, 2, 6);
+    if(!G.narrow || m % 500 === 0){ rc.fillStyle = css.ink; rc.globalAlpha = .75; rc.fillText(m === 1000 ? '1 km' : m + '', x, G.yM + hb + 20); rc.globalAlpha = 1; } }
+  // segnaletica orizzontale
+  rc.strokeStyle = css.mark; rc.lineWidth = 2; rc.setLineDash([10, 8]);
+  rc.beginPath(); rc.moveTo(0, G.yM); rc.lineTo(G.xS - 4, G.yM); rc.moveTo(G.xE + 4, G.yM); rc.lineTo(W, G.yM); rc.stroke(); rc.setLineDash([]);
+  rc.lineWidth = 4; rc.beginPath(); rc.moveTo(G.xS, G.yM + 1); rc.lineTo(G.xS, G.yM + h2); rc.moveTo(W - G.xS, G.yM - 1); rc.lineTo(W - G.xS, G.yM - h2); rc.stroke();
+  // cartello 30
+  const sx = W / 2, sy = Math.max(30, G.yM - G.bw - 58), sr = G.narrow ? 17 : 22;
+  rc.fillStyle = css.rail; rc.fillRect(sx - 1.5, sy + sr, 3, 14);
+  rc.beginPath(); rc.arc(sx, sy, sr, 0, 7); rc.fillStyle = '#fff'; rc.fill(); rc.lineWidth = sr * 0.24; rc.strokeStyle = '#C4302A'; rc.stroke();
+  rc.fillStyle = '#1D2228'; rc.font = `700 ${Math.round(sr * 0.95)}px "Barlow Condensed", "Arial Narrow", sans-serif`; rc.textBaseline = 'middle'; rc.fillText('30', sx, sy + 1); rc.textBaseline = 'alphabetic';
+  // semafori
+  const L = sim && sim.lights ? sim.lights : {};
+  drawLight(G.xS - 26, G.yM + h2 + 10, 'A', L);
+  drawLight(W - G.xS + 10, G.yM - h2 - 10 - 52, 'B', L);
+  // veicoli
+  if(sim){
+    const flashIds = new Set(sim.flashes.map(f => f.id));
+    for(const sd of ['A','B']){
+      let hidden = 0;
+      for(const c of sim.veh[sd]){
+        const [x, y] = carXY(G, sd, c.pos);
+        if(x < -10 || x > W + 10){ if(!c.entered) hidden++; continue; }
+        drawCar(x, y, sd, c, flashIds.has(c.id), now, (c.pos >= 0 && c.pos <= BRIDGE) ? (G.xE - G.xS) / BRIDGE : G.pxApp);
+      }
+      if(hidden){ const bx = sd === 'A' ? 8 : W - 52, by = sd === 'A' ? G.yM + h2 + 8 : G.yM - h2 - 28;
+        rc.fillStyle = css.panel; rc.fillRect(bx, by, 44, 20); rc.fillStyle = css.ink; rc.font = '700 12px "Atkinson Hyperlegible", sans-serif'; rc.textAlign = 'center'; rc.fillText('+' + hidden, bx + 22, by + 14); }
+    }
+    for(const inc of sim.incidents){ if(sim.t > inc.until) continue; const [x] = carXY(G, 'A', inc.x); burst(x, G.yM, now, inc.cause); }
+  }
+  // etichette direzione
+  rc.fillStyle = css.ink; rc.globalAlpha = .7; rc.font = '600 13px "Barlow Condensed", sans-serif'; rc.textAlign = 'left';
+  rc.fillText(tr('cv.fromA'), 8, G.yM + h2 + 44); rc.textAlign = 'right'; rc.fillText(tr('cv.fromB'), W - 8, G.yM - h2 - 36); rc.globalAlpha = 1; rc.textAlign = 'center';
+}
+function drawLight(x, y, label, L){
+  rc.fillStyle = '#1A1D21'; rc.beginPath(); rc.roundRect ? rc.roundRect(x, y, 16, 52, 4) : rc.rect(x, y, 16, 52); rc.fill();
+  [['r','led-r'],['y','led-y'],['g','led-g']].forEach(([k, col], i) => { const on = L[label + k]; rc.beginPath(); rc.arc(x + 8, y + 9 + i * 17, 5.5, 0, 7);
+    rc.fillStyle = on ? css[col] : '#3A3F46'; if(on){ rc.shadowColor = css[col]; rc.shadowBlur = 12; } rc.fill(); rc.shadowBlur = 0; });
+  rc.fillStyle = css.ink; rc.font = '700 15px "Barlow Condensed", sans-serif'; rc.textAlign = 'center'; rc.fillText(label, x - 10, y + 32);
+}
+function drawCar(x, y, sd, c, flash, now, pxm){
+  const w = 16, h = 10, dir = sd === 'A' ? 1 : -1;
+  rc.save(); rc.translate(x, y);
+  rc.fillStyle = CARS[c.color]; rc.beginPath(); rc.roundRect ? rc.roundRect(-w/2, -h/2, w, h, 3) : rc.rect(-w/2, -h/2, w, h); rc.fill();
+  rc.fillStyle = 'rgba(20,25,30,.55)'; rc.fillRect(dir > 0 ? w*0.05 : -w*0.33, -h/2 + 2, w*0.28, h - 4);
+  if(c.runner && !c.entered){ rc.strokeStyle = 'rgba(255,255,255,.0)'; }
+  if(flash){ const on = Math.floor(now / 250) % 2; rc.strokeStyle = css.err; rc.lineWidth = 2.5; rc.strokeRect(-w/2 - 2, -h/2 - 2, w + 4, h + 4);
+    if(on){ rc.fillStyle = css.err; rc.font = '700 11px "Atkinson Hyperlegible", sans-serif'; rc.textAlign = 'center'; rc.fillText(tr('cv.red'), 0, sd === 'A' ? 20 : -12); } }
+  rc.restore();
+}
+function burst(x, y, now, cause){
+  const s = 1 + 0.08 * Math.sin(now / 120); rc.save(); rc.translate(x, y); rc.scale(s, s);
+  rc.beginPath(); for(let i = 0; i < 16; i++){ const r = i % 2 ? 9 : 20, a = i * Math.PI / 8; rc.lineTo(Math.cos(a) * r, Math.sin(a) * r); } rc.closePath();
+  rc.fillStyle = cause === 'ciclo' ? css.err : '#F08A24'; rc.fill(); rc.lineWidth = 2; rc.strokeStyle = '#fff'; rc.stroke();
+  rc.fillStyle = '#fff'; rc.font = '700 15px "Atkinson Hyperlegible", sans-serif'; rc.textAlign = 'center'; rc.textBaseline = 'middle'; rc.fillText('!', 0, 1); rc.textBaseline = 'alphabetic';
+  rc.restore();
+}
+
+/* ---------- Cronogramma ---------- */
+function drawChrono(){
+  const [W, H] = fit(chrono, cc); cc.clearRect(0,0,W,H);
+  if(!ana || !ana.segs.length){ cc.fillStyle = css.muted; cc.font = '14px "Atkinson Hyperlegible", sans-serif'; cc.fillText(tr('ch.none'), 10, 30); return; }
+  const t0 = ana.startT, span = Math.min(tl.horizon - t0, ana.cyc ? ana.cyc * 1.6 : 600);
+  const left = 44, right = 8, top = 6, laneH = (H - 32 - top) / 6;
+  const X = t => left + (t - t0) / span * (W - left - right);
+  // zone tutto rosso
+  for(const c of ana.clear){ if(c.t0 > t0 + span) break; const a = X(Math.max(t0, c.t0)), b = X(Math.min(t0 + span, c.t1)); if(b <= a) continue;
+    cc.save(); cc.beginPath(); cc.rect(a, top, b - a, laneH * 6); cc.clip(); cc.strokeStyle = css.muted; cc.globalAlpha = .35; cc.lineWidth = 1;
+    for(let k = a - 200; k < b + 200; k += 7){ cc.beginPath(); cc.moveTo(k, top); cc.lineTo(k + laneH * 6, top + laneH * 6); cc.stroke(); } cc.restore(); }
+  const cols = {r:css['led-r'], y:css['led-y'], g:css['led-g']};
+  ROLES.forEach((r, i) => {
+    const y = top + i * laneH + (i >= 3 ? 0 : 0);
+    cc.fillStyle = css.muted; cc.font = '600 12px "JetBrains Mono", monospace'; cc.textAlign = 'left'; cc.fillText(r[0] + '·' + tr('ch.' + r[1]), 4, y + laneH * 0.7);
+    cc.fillStyle = css['led-off']; cc.globalAlpha = .25; cc.fillRect(left, y + 3, W - left - right, laneH - 6); cc.globalAlpha = 1;
+    for(const g of ana.segs){ if(g.t0 > t0 + span) break; if(!g.s[r] || g.t1 < t0) continue; cc.fillStyle = cols[r[1]]; const a = X(Math.max(t0, g.t0)), b = X(Math.min(t0 + span, g.t1)); cc.fillRect(a, y + 3, Math.max(1, b - a), laneH - 6); }
+  });
+  cc.strokeStyle = css.muted; cc.globalAlpha = .5; cc.beginPath(); cc.moveTo(left, top + laneH * 3); cc.lineTo(W - right, top + laneH * 3); cc.stroke(); cc.globalAlpha = 1;
+  const step = [10,15,30,60,120,300,600].find(s => span / s <= (W < 500 ? 5 : 9)) || 600;
+  cc.fillStyle = css.muted; cc.font = '11px "JetBrains Mono", monospace'; cc.textAlign = 'center';
+  for(let s = 0; s <= span + 0.01; s += step){ const x = X(t0 + s); cc.fillRect(x, top + laneH * 6, 1, 4); cc.fillText(s >= 60 ? (s / 60) + ' min' : s + ' s', x, H - 8); }
+}
+
+/* ---------- Ciclo animazione ---------- */
+let frameN = 0;
+function frame(ts){
+  const dtR = Math.min(0.1, (ts - lastTs) / 1000 || 0); lastTs = ts;
+  if(playing && sim){ acc += dtR * +$('#speed').value; let n = 0;
+    while(acc >= DT && n < 2000){ sim.step(DT); acc -= DT; n++; if(sim.t >= cfgCur.dur){ finish(); break; } } }
+  drawRoad(ts);
+  if((frameN++ & 3) === 0) updateStats();
+  requestAnimationFrame(frame);
+}
+
+/* ---------- Eventi ---------- */
+$('#run').addEventListener('click', () => execute(true));
+$('#pause').addEventListener('click', () => { if(!sim) return; if(finished){ execute(true); return; } playing = !playing; setPauseLabel(); });
+$('#restart').addEventListener('click', () => { if(!cfgCur) return execute(true); sim = makeSim(cfgCur, tl); sim.step(0.0001); finished = false; verdictState = null; renderVerdict(); playing = true; setPauseLabel(); consoleEl.querySelectorAll('.e,.w').forEach(n => n.remove()); updateStats(); });
+$('#skip').addEventListener('click', () => { if(!sim || finished) return; while(sim.t < cfgCur.dur) sim.step(DT); finish(); updateStats(); });
+$('#example').addEventListener('change', e => { const v = e.target.value; if(!v) return; const src = EX()[v]; curEx = v; $('#code').value = src; e.target.value = '';
+  if(!/SCAL[AE]/i.test(src)) $('#scale').value = '1'; detectAndApply(src, true); execute(true); });
+$('#detect').addEventListener('click', () => detectAndApply($('#code').value, false));
+$('#code').addEventListener('keydown', e => { if(e.key === 'Tab'){ e.preventDefault(); const t = e.target, s = t.selectionStart; t.setRangeText('  ', s, t.selectionEnd, 'end'); } });
+$('#code').addEventListener('paste', () => setTimeout(() => { curEx = null; const src = $('#code').value; $('#scale').value = '1'; applyAutoFromCode(src, true); detectAndApply(src, false); }, 0));
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+  $('#tab-sim').hidden = b.dataset.tab !== 'sim'; $('#tab-hw').hidden = b.dataset.tab !== 'hw';
+  if(b.dataset.tab === 'sim') setTimeout(drawChrono, 0);
+}));
+window.addEventListener('resize', () => drawChrono());
+
+function applyLang(lang){
+  const prev = LANG; LANG = lang;
+  try { localStorage.setItem('sua-lang', lang); } catch(e){}
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = tr(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = tr(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', tr(el.dataset.i18nAria)); });
+  document.querySelectorAll('[data-lang-block]').forEach(el => { el.hidden = el.dataset.langBlock !== lang; });
+  document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+  const code = $('#code');
+  if(prev !== lang && curEx && code.value === (prev === 'en' ? EX_EN : EX_IT)[curEx]) code.value = EX()[curEx];
+  setPauseLabel(); renderVerdict(); drawChrono();
+}
+document.querySelectorAll('.lang button').forEach(b => b.addEventListener('click', () => applyLang(b.dataset.lang)));
+$('#code').addEventListener('input', () => { curEx = null; });
+applyLang(LANG);
+$('#code').value = EX().wrong;
+detectAndApply(EX().wrong, true);
+const go = () => { execute(true); requestAnimationFrame(frame); };
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(go, go);
+})();
+</script>
+
+</body>
+</html>

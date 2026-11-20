@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ponte chiuso · Senso Unico Alternato</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+:root{--bg:#ECEFEA;--ink:#1D2228;--muted:#5A636E;--accent:#F2B705;--water:#7DB1D3;--water2:#A7CCE5;--asphalt:#4A4F57;--grass:#B7C79D;--red:#FF3B30}
+@media (prefers-color-scheme: dark){:root{--bg:#14171B;--ink:#E7EAE5;--muted:#9AA3AD;--water:#1D4763;--water2:#2A5D7E;--asphalt:#3B4047;--grass:#2C3826;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,sans-serif;display:flex;flex-direction:column}
+.band{height:14px;background:repeating-linear-gradient(-45deg,#1D2228 0 14px,var(--accent) 14px 28px)}
+main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px 16px;text-align:center}
+.code{font:700 15px "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:.2em;color:var(--muted)}
+h1{font:700 clamp(30px,6vw,56px)/1.05 "Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;margin:0;text-wrap:balance}
+p{margin:0;max-width:52ch;color:var(--muted);font-size:17px;line-height:1.5}
+svg{width:min(640px,100%);height:auto}
+a{display:inline-block;margin-top:6px;background:var(--accent);color:#2A2000;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:6px}
+a:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.blink{animation:b 1s steps(1) infinite}
+@keyframes b{50%{opacity:.15}}
+.wave{animation:w 3s ease-in-out infinite alternate}
+@keyframes w{to{transform:translateX(-14px)}}
+.bob{animation:o 2.4s ease-in-out infinite alternate;transform-origin:322px 150px}
+@keyframes o{to{transform:rotate(-4deg) translateY(3px)}}
+@media (prefers-reduced-motion: reduce){.blink,.wave,.bob{animation:none}}
+</style>
+</head>
+<body>
+<div class="band"></div>
+<main>
+  <div class="code" id="c404">ERRORE 404</div>
+  <h1 id="h404">Questo non è il ponte che stai cercando</h1>
+  <svg viewBox="0 0 640 230" role="img" aria-label="Ponte interrotto con un'auto caduta nel fiume e il semaforo rosso">
+    <rect x="0" y="0" width="640" height="230" fill="var(--grass)"/>
+    <rect x="140" y="0" width="360" height="230" fill="var(--water)"/>
+    <g class="wave" stroke="var(--water2)" stroke-width="3" fill="none">
+      <path d="M150 40 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0"/>
+      <path d="M150 185 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0"/>
+      <path d="M150 215 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0"/>
+    </g>
+    <path d="M0 85 H120 L140 95 H275 L262 120 L248 106 L236 125 H140 L120 135 H0 Z" fill="var(--asphalt)"/>
+    <path d="M640 85 H520 L500 95 H385 L398 112 L410 100 L424 125 H500 L520 135 H640 Z" fill="var(--asphalt)"/>
+    <path d="M0 110 H110 M530 110 H640" stroke="#F5F5EF" stroke-width="3" stroke-dasharray="12 9"/>
+    <g class="bob">
+      <rect x="296" y="138" width="54" height="26" rx="6" fill="#E06C3C" transform="rotate(24 322 150)"/>
+      <rect x="318" y="141" width="16" height="16" rx="2" fill="rgba(20,25,30,.55)" transform="rotate(24 322 150)"/>
+      <path d="M286 170 q36 12 72 0" stroke="var(--water2)" stroke-width="4" fill="none"/>
+    </g>
+    <rect x="96" y="140" width="22" height="60" rx="4" fill="#1A1D21"/>
+    <circle class="blink" cx="107" cy="153" r="7" fill="var(--red)"/>
+    <circle cx="107" cy="170" r="7" fill="#3A3F46"/>
+    <circle cx="107" cy="187" r="7" fill="#3A3F46"/>
+    <circle cx="560" cy="45" r="26" fill="#fff" stroke="#C4302A" stroke-width="7"/>
+    <text x="560" y="55" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="28" fill="#1D2228">30</text>
+  </svg>
+  <p id="p404">Questa pagina non esiste, oppure qualcuno ha dato il verde a tutti e due i lati. Torna al simulatore e riprova.</p>
+  <a id="home" href="/">Torna al simulatore</a>
+</main>
+<script>
+(function(){
+  var seg = location.pathname.split('/')[1];
+  var lang = 'it';
+  try { var sv = localStorage.getItem('sua-lang'); lang = (sv === 'it' || sv === 'en') ? sv : (/^it\b/i.test(navigator.language || '') ? 'it' : 'en'); }
+  catch (e) { lang = /^it\b/i.test(navigator.language || '') ? 'it' : 'en'; }
+  if (lang === 'en') {
+    document.documentElement.lang = 'en';
+    document.title = 'Bridge closed · Alternating One-Way';
+    document.getElementById('c404').textContent = 'ERROR 404';
+    document.getElementById('h404').textContent = 'This is not the bridge you are looking for';
+    document.getElementById('p404').textContent = 'This page does not exist, or someone gave green to both sides at once. Go back to the simulator and try again.';
+    document.getElementById('home').textContent = 'Back to the simulator';
+  }
+  if (/\.github\.io$/.test(location.hostname) && seg && !/\.html?$/.test(seg) && !/\.github\.io$/i.test(seg)) {
+    document.getElementById('home').href = '/' + seg + '/';
+  }
+})();
+</script>
+</body>
+</html>
